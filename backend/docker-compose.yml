@@ -1,0 +1,38 @@
+version: '3.5'
+
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgis/postgis:16-3.5
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+  
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4566:4566" # main gateway
+      - "4571:4571"
+    environment:
+      - SERVICES=sns,lambda
+      - DEBUG=1
+      - LAMBDA_EXECUTOR=docker
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "./.localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+  
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+    postgres:
